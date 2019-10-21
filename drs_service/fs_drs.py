@@ -11,6 +11,8 @@ class FSBackend(DRSBackend):
         self.cwd = os.getcwd()
         for dirpath, dirnames, filenames in os.walk(self.cwd):
             for f in filenames:
+                if f.startswith("."):
+                    continue
                 hl = hashlib.sha256()
                 with open(os.path.join(dirpath, f), "rb") as inp:
                     rel = dirpath[len(self.cwd)+1:]
@@ -23,7 +25,6 @@ class FSBackend(DRSBackend):
                         sz += len(stuff)
 
                     hashid = hl.hexdigest()
-                    print(hashid)
                     self.files[hashid] = {
                         'id': hashid,
                         'name': f,
@@ -49,7 +50,6 @@ class FSBackend(DRSBackend):
 
     def GetObject(self, object_id, expand, user):
         # required: ['id', 'self_uri', 'size', 'created_time', 'checksums']
-        print("user is", user)
         return self.files[object_id]
 
     def GetAccessURL(self, object_id, access_id):
@@ -61,7 +61,16 @@ class FSBackend(DRSBackend):
         return send_file(os.path.join(self.cwd, path))
 
 def auth(apikey, required_scopes):
-    return {'sub': apikey}
+    if apikey.startswith("Bearer "):
+        apikey = apikey[len("Bearer "):]
+    else:
+        return None
+    with open(".secrets", "rt") as secrets:
+        for s in secrets:
+            s = s.rstrip()
+            if s == apikey:
+                return {'sub': apikey}
+    return None
 
 def create_backend(app, opts):
     fsb = FSBackend(opts)
