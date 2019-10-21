@@ -1,8 +1,9 @@
 import os
 import hashlib
+import copy
 
 from drs_service.util import DRSBackend
-from flask import send_file
+import flask
 
 class FSBackend(DRSBackend):
     def __init__(self, opts):
@@ -37,9 +38,10 @@ class FSBackend(DRSBackend):
                         'access_methods': [{
                             "type": "https",
                             "access_url": {
-                                "url": "/download/"+rel,
+                                "url": "%s/%s" % (rel, f),
                                 "headers": []
                             },
+                            "access_id": "",
                             "region": ""
                             }],
                         'checksums': [{"type": "sha256", "checksum": hashid}],
@@ -61,7 +63,9 @@ class FSBackend(DRSBackend):
         if object_id not in self.files:
             return None, 404
 
-        return self.files[object_id]
+        ob = copy.copy(self.files[object_id])
+        ob['access_methods'][0]['access_url']['url'] = "%s://%s/download/%s" % (flask.request.scheme, flask.request.host, ob['access_methods'][0]['access_url']['url'])
+        return ob
 
     def GetAccessURL(self, object_id, access_id):
         pass
@@ -69,7 +73,7 @@ class FSBackend(DRSBackend):
     def download(self, path):
         if "../" in path:
             raise Exception("Bad path")
-        return send_file(os.path.join(self.cwd, path))
+        return flask.send_file(os.path.join(self.cwd, path))
 
 
 def create_backend(app, opts):
