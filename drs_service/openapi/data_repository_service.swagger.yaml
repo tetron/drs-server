@@ -164,7 +164,7 @@ securityDefinitions:
     type: apiKey
     name: Authorization
     in: header
-    x-apikeyInfoFunc: drs_service.fs_drs.auth
+    x-apikeyInfoFunc: drs_service.main.auth
 definitions:
   Checksum:
     type: object

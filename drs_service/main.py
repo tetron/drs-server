@@ -42,6 +42,14 @@ def setup(args=None):
     return app
 
 
+def auth(apikey, required_scopes):
+    if apikey.startswith("Bearer "):
+        apikey = apikey[len("Bearer "):]
+    else:
+        return None
+    return {'sub': apikey}
+
+
 def main(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(description='Data Repository Service')
     parser.add_argument("--backend", type=str, default="drs_service.fs_drs",

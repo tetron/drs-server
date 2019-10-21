@@ -50,6 +50,17 @@ class FSBackend(DRSBackend):
 
     def GetObject(self, object_id, expand, user):
         # required: ['id', 'self_uri', 'size', 'created_time', 'checksums']
+        found = False
+        with open(".secrets", "rt") as secrets:
+            for s in secrets:
+                s = s.rstrip()
+                if s == user:
+                    found = True
+        if not found:
+            return None, 401
+        if object_id not in self.files:
+            return None, 404
+
         return self.files[object_id]
 
     def GetAccessURL(self, object_id, access_id):
@@ -60,17 +71,6 @@ class FSBackend(DRSBackend):
             raise Exception("Bad path")
         return send_file(os.path.join(self.cwd, path))
 
-def auth(apikey, required_scopes):
-    if apikey.startswith("Bearer "):
-        apikey = apikey[len("Bearer "):]
-    else:
-        return None
-    with open(".secrets", "rt") as secrets:
-        for s in secrets:
-            s = s.rstrip()
-            if s == apikey:
-                return {'sub': apikey}
-    return None
 
 def create_backend(app, opts):
     fsb = FSBackend(opts)
