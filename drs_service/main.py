@@ -69,7 +69,7 @@ def main(argv=sys.argv[1:]):
 
     app = setup(args)
 
-    app.run(port=args.port, debug=args.debug)
+    app.run(port=args.port, debug=args.debug, ssl_context=('cert.pem', 'key.pem'))
 
 
 if __name__ == "__main__":
